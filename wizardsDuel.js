@@ -13,7 +13,7 @@ class PlayerWizard extends Sprite {
         this.y = this.height;
         this.defineAnimation("down", 6, 8);
         this.defineAnimation("up", 0, 2);
-        this.defineAnimation("right", 3, 4, 5);
+        this.defineAnimation("right", 3, 5);
         this.speedWhenWalking = 100;
     }
     handleDownArrowKey() {
@@ -61,7 +61,20 @@ class Spell extends Sprite {
     // Delete spell when it leaves display area
     game.removeSprite(this);
     }
+    handleCollision(otherSprite) {
+         // Compare images so Stranger's spells don't destroy each other.
+ if (this.getImage() !== otherSprite.getImage()) {
+     // Adjust mostly blank spell image to vertical center.
+      let verticalOffset = Math.abs(this.y - otherSprite.y);
+      if (verticalOffset < this.height / 2) {
+      game.removeSprite(this);
+      new Fireball(otherSprite);
+      
+ }
     }
+    return false;
+    }
+}
 class NonPlayerWizard extends Sprite {
     constructor(){
         super();
@@ -75,8 +88,24 @@ class NonPlayerWizard extends Sprite {
         this.speed = 150
         this.defineAnimation("down", 6, 8);
         this.defineAnimation("up", 0, 2);
-    }
+        this.defineAnimation("left", 9,11);
+}
     handleGameLoop() {
+      this.y = Math.max(0, this.y);
+      this.y = Math.min(552, this.y);
+      if (Math.random() < 0.01) {  
+        let spell = new Spell();
+        spell.x = this.x - 48; 
+        // this sets the position of the spell object equal to
+        spell.y = this.y;
+        // the position of any object created from the PlayerWizard class
+        spell.name = "A spell cast by stranger";
+        spell.setImage("strangerSpellSheet.png");
+        spell.angle = 180;
+        this.playAnimation("left", false); 
+        }
+    
+
         if (this.y <= 0) {
       // Upward motion has reached top, so turn down
       this.y = 0;
@@ -89,6 +118,30 @@ class NonPlayerWizard extends Sprite {
       this.angle = 90;
       this.playAnimation("up");
 }
-    }
+}
 }
     let stranger = new NonPlayerWizard()
+    
+class Fireball extends Sprite {
+    constructor(deadSprite){
+        super();
+        this.x = deadSprite.x;
+        this.y = deadSprite.y;
+        this.setImage("fireballSheet.png");
+        this.name = "A ball of fire";
+        game.removeSprite(deadSprite);
+        this.defineAnimation("explode", 0, 7);
+        this.playAnimation("explode");
+        
+    }
+    handleAnimationEnd() {
+        game.removeSprite(this);
+        if (!game.isActiveSprite(stranger)) {
+            game.end("Congratulations!\n\nMarcus has defeated the mysterious"
+            + "\nstranger in the dark cloak!");
+        }
+        if (!game.isActiveSprite(marcus)) {
+            game.end ("Marcus is defeated by the mysterious\nstranger in the dark cloak!\n\nBetter luck next time.")
+}
+}
+}
